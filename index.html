@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>月度收支分配 · 储蓄12万版（PWA · 记账与保存）</title>
+  <meta name="theme-color" content="#3b82f6" />
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <style>
+    :root {
+      --bg: #f7f7fb;
+      --card: #ffffff;
+      --ink: #222;
+      --muted: #666;
+      --accent: #3b82f6;
+      --ok: #10b981;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --line: #e8e8ef;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", "PingFang SC", "Hiragino Sans", "Microsoft YaHei", sans-serif;
+      background: var(--bg); color: var(--ink);
+    }
+    .wrap { max-width: 1040px; margin: 0 auto; }
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,.05);
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid var(--line);
+    }
+    h1 { font-size: 22px; margin: 0 0 6px; }
+    h2 { font-size: 18px; margin: 0 0 10px; }
+    .sub { color: var(--muted); font-size: 14px; margin-bottom: 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid var(--line); }
+    th { background: #fafafa; font-weight: 600; }
+    tfoot td { font-weight: 700; }
+    .grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-top: 10px;}
+    .kpi { background: var(--card); border:1px solid var(--line); border-radius: 12px; padding: 14px; }
+    .kpi .label { color: var(--muted); font-size: 12px; }
+    .kpi .val { font-size: 20px; font-weight: 800; margin-top: 4px; }
+    .badge { display:inline-block; padding:3px 8px; border-radius:999px; font-size:12px; background:#eef2ff; border:1px solid #e5e7eb; color:#374151; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items: center; }
+    input, select, button, textarea { padding:12px; border-radius:12px; border:1px solid var(--line); background:#fff; font-size:16px; }
+    button { cursor:pointer; }
+    .btn { background: var(--accent); color:#fff; border: none; }
+    .btn-text { background:transparent; color:var(--accent); border:1px solid var(--accent); }
+    .btn-danger { background: var(--danger); color:#fff; border:none; }
+    .muted { color: var(--muted); }
+    .bar-wrap { width:100%; background:#f2f3f8; border-radius:999px; height:10px; overflow:hidden; border:1px solid var(--line);}
+    .bar { height:100%; background: linear-gradient(90deg, #60a5fa, #10b981); width:0%; }
+    .bar.warn { background: linear-gradient(90deg, #fbbf24, #f97316); }
+    .bar.danger { background: linear-gradient(90deg, #f87171, #ef4444); }
+    .right { text-align:right; }
+    .two-col { display:grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .note { background:#fffbeb; border:1px dashed #f59e0b; color:#7c5e10; padding:10px 12px; border-radius:12px; font-size:13px; }
+    .small { font-size: 12px; }
+    .nowrap { white-space: nowrap; }
+
+    /* Mobile tweaks */
+    @media (max-width: 720px) {
+      .grid { grid-template-columns: 1fr; }
+      .two-col { grid-template-columns: 1fr; }
+      .wrap { padding-bottom: 80px; } /* space for fab */
+    }
+    .fab {
+      position: fixed;
+      right: 16px; bottom: 16px;
+      background: var(--accent);
+      color: #fff; border: none; border-radius: 999px;
+      padding: 12px 16px; font-size: 14px; box-shadow: 0 10px 18px rgba(0,0,0,.15);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>📝 月度收支分配（储蓄 12 万 / 月）</h1>
+      <p class="sub">保険 ３万 + NISA貯金９万 · 手机可安装 · 离线可用</p>
+    </div>
+
+    <div class="card">
+      <div class="grid">
+        <div class="kpi">
+          <div class="label">月到手收入</div>
+          <div class="val">¥ 240,000</div>
+          <div class="small">单位：日元</div>
+        </div>
+        <div class="kpi">
+          <div class="label">月度储蓄（自动）</div>
+          <div class="val ok">¥ 120,000</div>
+          <div class="small">发薪日自动转入储蓄账户</div>
+        </div>
+        <div class="kpi">
+          <div class="label">剩余可支配</div>
+          <div class="val">¥ 50,000</div>
+          <div class="small">扣除储蓄与固定支出后</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>① 月度预算明细</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>用途</th>
+            <th>金额（¥）</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>到手收入</td>
+            <td>240,000</td>
+            <td>每月工资到账</td>
+          </tr>
+          <tr>
+            <td>储蓄专用账户 <span class="badge">自动转账</span></td>
+            <td>-120,000</td>
+            <td>发薪日固定转帳</td>
+          </tr>
+          <tr>
+            <td>家賃電力燃費等</td>
+            <td>-70,000</td>
+            <td>固定支出</td>
+          </tr>
+          <tr>
+            <td>食費</td>
+            <td>-30,000</td>
+            <td>每日三餐¥1000（家庭单位¥2000）</td>
+          </tr>
+          <tr>
+            <td>娱乐活动</td>
+            <td>-10,000</td>
+            <td>每週1次，每次¥2500以内</td>
+          </tr>
+          <tr>
+            <td>交通費</td>
+            <td>-10,000</td>
+            <td>发薪日手动充值</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="note">说明：可支配金额合计为 5 万（食費3万 + 娱乐活动1万 + 交通費1万）。</p>
+    </div>
+
+    <div class="card">
+      <h2>② 本月预算与进度</h2>
+      <div class="row" style="gap:8px; align-items:center;">
+        <label for="monthPick" class="nowrap">选择月份：</label>
+        <input id="monthPick" type="month" />
+        <button id="resetMonth" class="btn-text">初始化/切换月份</button>
+        <span class="muted small">（每个月分别独立记账与预算）</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>类别</th>
+            <th>预算（¥）</th>
+            <th>已用（¥）</th>
+            <th>剩余（¥）</th>
+            <th>进度</th>
+          </tr>
+        </thead>
+        <tbody id="budgetRows"></tbody>
+        <tfoot>
+          <tr>
+            <td><strong>合计（可支配）</strong></td>
+            <td class="right nowrap" id="sumBudget">—</td>
+            <td class="right nowrap" id="sumSpent">—</td>
+            <td class="right nowrap" id="sumRemain">—</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>③ 记帳</h2>
+      <div class="two-col">
+        <div>
+          <div class="row">
+            <label class="nowrap">日期</label>
+            <input id="date" type="date" />
+          </div>
+          <div class="row">
+            <label class="nowrap">类别</label>
+            <select id="category">
+              <option value="food">食費</option>
+              <option value="entertain">娱乐活动</option>
+              <option value="transport">交通費</option>
+              <option value="other">其他</option>
+            </select>
+          </div>
+          <div class="row">
+            <label class="nowrap">金额（¥）</label>
+            <input id="amount" type="number" inputmode="numeric" min="1" step="1" placeholder="1000" />
+          </div>
+          <div class="row">
+            <label class="nowrap">备注</label>
+            <input id="memo" type="text" placeholder="店名/用途（可空）" />
+          </div>
+          <div class="row">
+            <button id="add" class="btn">添加记录</button>
+          </div>
+        </div>
+        <div>
+          <p class="note">提示：<br>• 每日三餐¥1000（家庭单位¥2000）；<br>• 娱乐活动每週1次，每次¥2500以内；<br>• 交通費每月上限¥10,000。</p>
+          <div class="row">
+            <button id="exportCsv" class="btn-text">导出当前月为 CSV</button>
+            <button id="clearMonth" class="btn-danger">清空当前月记录</button>
+          </div>
+          <p class="small muted">数据保存在你的设备 <strong>本地</strong>（localStorage）。换设备/浏览器会丢失，记得导出 CSV 备份。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>④ 当月记录</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>日期</th>
+            <th>类别</th>
+            <th class="right">金额（¥）</th>
+            <th>备注</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="recordsBody"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5" class="small muted">小技巧：使用浏览器搜索（Ctrl/Cmd + F）快速筛选店名或金额。</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <button id="installBtn" class="fab" hidden>安装到手机</button>
+
+  <script>
+    // ===== PWA install prompt =====
+    let deferredPrompt = null;
+    const installBtn = document.getElementById('installBtn');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.hidden = false;
+    });
+    installBtn.addEventListener('click', async () => {
+      installBtn.hidden = true;
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+      }
+    });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+      });
+    }
+
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+    const fmt = (n) => Number(n).toLocaleString('zh-CN');
+
+    const CATEGORY_LABELS = {
+      food: '食費',
+      entertain: '娱乐活动',
+      transport: '交通費',
+      other: '其他',
+    };
+    const BUDGETS = { food: 30000, entertain: 10000, transport: 10000, other: 0 };
+    const monthKey = (ym) => 'budgetApp::single::' + ym;
+
+    function loadData(ym) {
+      const s = localStorage.getItem(monthKey(ym));
+      if (!s) return [];
+      try { return JSON.parse(s); } catch (e) { return []; }
+    }
+    function saveData(ym, arr) { localStorage.setItem(monthKey(ym), JSON.stringify(arr)); }
+
+    function renderBudget(ym) {
+      const rowsEl = $('#budgetRows');
+      rowsEl.innerHTML = '';
+      const recs = loadData(ym);
+      const spent = { food:0, entertain:0, transport:0, other:0 };
+      recs.forEach(r => { spent[r.cat] = (spent[r.cat]||0) + Number(r.amount); });
+
+      let sumBudget=0, sumSpent=0;
+      Object.keys(BUDGETS).forEach(cat => {
+        const b = BUDGETS[cat];
+        const s = spent[cat] || 0;
+        const remain = b - s;
+        sumBudget += b;
+        sumSpent += s;
+
+        let pct = b > 0 ? Math.min(100, Math.round(s / b * 100)) : (s>0 ? 100 : 0);
+        let cls = 'bar';
+        if (b>0) {
+          if (pct <= 70) cls = 'bar';
+          else if (pct <= 100) cls = 'bar warn';
+          else cls = 'bar danger';
+        } else {
+          if (s > 0) cls = 'bar danger';
+        }
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${CATEGORY_LABELS[cat]}</td>
+          <td class="right nowrap">${fmt(b)}</td>
+          <td class="right nowrap">${fmt(s)}</td>
+          <td class="right nowrap">${fmt(remain)}</td>
+          <td><div class="bar-wrap"><div class="${cls}" style="width:${pct}%"></div></div></td>
+        `;
+        rowsEl.appendChild(tr);
+      });
+      $('#sumBudget').textContent = fmt(sumBudget);
+      $('#sumSpent').textContent = fmt(sumSpent);
+      $('#sumRemain').textContent = fmt(sumBudget - sumSpent);
+    }
+
+    function renderRecords(ym) {
+      const body = $('#recordsBody');
+      body.innerHTML = '';
+      const arr = loadData(ym);
+      arr.sort((a,b) => a.date.localeCompare(b.date));
+      arr.forEach((r, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.date}</td>
+          <td>${CATEGORY_LABELS[r.cat]||r.cat}</td>
+          <td class="right">${fmt(r.amount)}</td>
+          <td>${r.memo||''}</td>
+          <td><button data-i="${idx}" class="btn-text btn-del">删除</button></td>
+        `;
+        body.appendChild(tr);
+      });
+      $$('.btn-del').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const i = Number(e.target.getAttribute('data-i'));
+          const cur = loadData(ym);
+          cur.splice(i,1);
+          saveData(ym, cur);
+          renderBudget(ym);
+          renderRecords(ym);
+        });
+      });
+    }
+
+    function exportCSV() {
+      const ym = $('#monthPick').value || new Date().toISOString().slice(0,7);
+      const arr = loadData(ym);
+      const header = ['日期','类别','金额','备注'];
+      const lines = [header.join(',')];
+      arr.forEach(r => {
+        const line = [
+          r.date,
+          CATEGORY_LABELS[r.cat]||r.cat,
+          r.amount,
+          (r.memo||'').replace(/,/g,'，')
+        ].join(',');
+        lines.push(line);
+      });
+      const blob = new Blob([lines.join('\\n')], {type: 'text/csv;charset=utf-8;'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `记账_${ym}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const d = new Date();
+      $('#monthPick').value = d.toISOString().slice(0,7);
+      $('#date').value = d.toISOString().slice(0,10);
+
+      $('#resetMonth').addEventListener('click', () => {
+        renderBudget($('#monthPick').value);
+        renderRecords($('#monthPick').value);
+      });
+      $('#exportCsv').addEventListener('click', exportCSV);
+
+      $('#clearMonth').addEventListener('click', () => {
+        const ym = $('#monthPick').value;
+        if (confirm('确定要清空 '+ ym +' 的所有记录吗？此操作不可撤销！')) {
+          localStorage.setItem(monthKey(ym), JSON.stringify([]));
+          renderBudget(ym);
+          renderRecords(ym);
+        }
+      });
+
+      $('#add').addEventListener('click', () => {
+        const ym = $('#monthPick').value;
+        const date = $('#date').value;
+        const cat = $('#category').value;
+        const amount = Number($('#amount').value);
+        const memo = $('#memo').value.trim();
+
+        if (!date || !amount || amount <= 0) {
+          alert('请填写正确的日期与金额'); return;
+        }
+        const arr = loadData(ym);
+        arr.push({ date, cat, amount, memo });
+        saveData(ym, arr);
+
+        $('#amount').value = '';
+        $('#memo').value = '';
+
+        renderBudget(ym);
+        renderRecords(ym);
+      });
+
+      const ym = $('#monthPick').value;
+      renderBudget(ym);
+      renderRecords(ym);
+    });
+  </script>
+</body>
+</html>
