@@ -102,11 +102,19 @@
       </div>
       <!-- 手動入力フォーム：この月の予算（localStorageに保存） -->
       <div class="row" style="margin-top:7px">
-        <label>食費</label><input id="mb_food" type="number" min="0" step="1" value="30000"><br>
-        <label>娯楽</label><input id="mb_fun" type="number" min="0" step="1" value="10000"><br>
-        <label>交通費</label><input id="mb_transport" type="number" min="0" step="1" value="10000"><br>
-        <label>上記以外</label><input id="mb_other" type="number" min="0" step="1" value="0"><br>
-        <button id="saveMonthBudget" class="btn">この月の予算を保存</button>
+        <div>
+          <label>食費</label><input id="mb_food" type="number" min="0" step="1" value="30000">
+        </div>
+        <div>
+          <label>娯楽</label><input id="mb_fun" type="number" min="0" step="1" value="10000">
+        </div>
+        <div>
+          <label>交通費</label><input id="mb_transport" type="number" min="0" step="1" value="10000">
+        </div>
+        <div>
+          <label>上記以外</label><input id="mb_other" type="number" min="0" step="1" value="0">
+        </div>
+          <button id="saveMonthBudget" class="btn">この月の予算を保存</button>
       </div>
       <table>
         <thead><tr><th>カテゴリー</th><th>予算</th><th>使用済</th><th>残り</th><th>進捗</th></tr></thead>
