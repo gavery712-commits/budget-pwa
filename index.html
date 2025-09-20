@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>📝 月度収支配分</title>
+  <title>📝 家計簿</title>
   <style>
     :root { --bg:#f7f7fb; --card:#fff; --ink:#222; --muted:#666; --accent:#3b82f6; --line:#e8e8ef; --danger:#ef4444; }
     *{box-sizing:border-box}
@@ -28,22 +28,22 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="card"><h1>📝 月度収支配分</h1></div>
+    <div class="card"><h1>📝 家計簿</h1></div>
 
     <div class="card">
       <div class="grid">
         <div class="kpi">
-          <div class="label">月の手取り収入</div>
+          <div class="label">月収（手取り）</div>
           <div class="val" id="kpiIncome">¥ 240,000</div>
           <div class="small">単位：円</div>
         </div>
         <div class="kpi">
-          <div class="label">月次貯蓄（自動）</div>
+          <div class="label">月次貯蓄</div>
           <div class="val" id="kpiSaving">¥ 120,000</div>
           <div class="small">給与日に自動振替</div>
         </div>
         <div class="kpi">
-          <div class="label">残りの可処分</div>
+          <div class="label">残り生活費</div>
           <div class="val" id="kpiDisposable">¥ 50,000</div>
           <div class="small">食費＋娯楽＋交通費</div>
         </div>
@@ -51,12 +51,12 @@
     </div>
 
     <div class="card">
-      <h2>① 月次予算の明細（編集可能）</h2>
+      <h2>① 月次予算明細（編集可能）</h2>
       <table>
         <thead><tr><th>用途</th><th>金額（¥）</th><th>説明</th></tr></thead>
         <tbody>
-          <tr><td>手取り収入</td><td><input id="p_income" type="number" min="0" step="1" value="240000" /></td><td><input id="p_income_note" type="text" value="毎月の給与" /></td></tr>
-          <tr><td>貯蓄専用口座（自動振替）</td><td><input id="p_saving" type="number" min="0" step="1" value="120000" /></td><td><input id="p_saving_note" type="text" value="給与日に固定振替" /></td></tr>
+          <tr><td>月収（手取り）</td><td><input id="p_income" type="number" min="0" step="1" value="240000" /></td><td><input id="p_income_note" type="text" value="毎月の給与" /></td></tr>
+          <tr><td>月次貯蓄</td><td><input id="p_saving" type="number" min="0" step="1" value="120000" /></td><td><input id="p_saving_note" type="text" value="給与日に固定振替" /></td></tr>
           <tr><td>家賃・電気・燃費など</td><td><input id="p_fixed" type="number" min="0" step="1" value="70000" /></td><td><input id="p_fixed_note" type="text" value="固定費" /></td></tr>
           <tr><td>食費</td><td><input id="p_food" type="number" min="0" step="1" value="30000" /></td><td><input id="p_food_note" type="text" value="1日1000円（家庭なら2000円）" /></td></tr>
           <tr><td>娯楽</td><td><input id="p_fun" type="number" min="0" step="1" value="10000" /></td><td><input id="p_fun_note" type="text" value="週1回・1回2500円以内" /></td></tr>
