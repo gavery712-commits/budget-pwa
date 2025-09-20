@@ -3,16 +3,277 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>📝 月度収支配分（PWA・家計簿）</title>
-  <meta name="theme-color" content="#3b82f6" />
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <!-- style省略 (前の生成内容と同じ) -->
+  <title>📝 月度収支配分</title>
+  <style>
+    :root { --bg:#f7f7fb; --card:#fff; --ink:#222; --muted:#666; --accent:#3b82f6; --line:#e8e8ef; --danger:#ef4444; }
+    *{box-sizing:border-box}
+    body{margin:0;padding:20px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif;background:var(--bg);color:var(--ink)}
+    .wrap{max-width:1040px;margin:0 auto}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 8px 20px rgba(0,0,0,.05)}
+    h1{font-size:22px;margin:0 0 6px} h2{font-size:18px;margin:0 0 10px}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:10px 8px;text-align:left;border-bottom:1px solid var(--line)} th{background:#fafafa;font-weight:600}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px}
+    .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+    .kpi .label{color:var(--muted);font-size:12px} .kpi .val{font-size:20px;font-weight:800;margin-top:4px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    input,select,button{padding:12px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:16px}
+    input[type="number"]{width:160px}
+    button{cursor:pointer}.btn{background:var(--accent);color:#fff;border:none}.btn-text{background:transparent;color:var(--accent);border:1px solid var(--accent)}.btn-danger{background:var(--danger);color:#fff;border:none}
+    .bar-wrap{width:100%;background:#f2f3f8;border-radius:999px;height:10px;overflow:hidden;border:1px solid var(--line)}
+    .bar{height:100%;background:linear-gradient(90deg,#60a5fa,#10b981);width:0%}.bar.warn{background:linear-gradient(90deg,#fbbf24,#f97316)}.bar.danger{background:linear-gradient(90deg,#f87171,#ef4444)}
+    .right{text-align:right}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}.small{font-size:12px}.muted{color:#666}.nowrap{white-space:nowrap}
+    @media (max-width:720px){.grid{grid-template-columns:1fr}.two-col{grid-template-columns:1fr}.wrap{padding-bottom:80px}}
+  </style>
 </head>
 <body>
-  <!-- 本文省略 (前の生成内容と同じ、①編集可能明細+検証, KPI同期, 日本語化) -->
-  <h1>📝 月度収支配分</h1>
+  <div class="wrap">
+    <div class="card"><h1>📝 月度収支配分</h1></div>
+
+    <div class="card">
+      <div class="grid">
+        <div class="kpi">
+          <div class="label">月の手取り収入</div>
+          <div class="val" id="kpiIncome">¥ 240,000</div>
+          <div class="small">単位：円</div>
+        </div>
+        <div class="kpi">
+          <div class="label">月次貯蓄（自動）</div>
+          <div class="val" id="kpiSaving">¥ 120,000</div>
+          <div class="small">給与日に自動振替</div>
+        </div>
+        <div class="kpi">
+          <div class="label">残りの可処分</div>
+          <div class="val" id="kpiDisposable">¥ 50,000</div>
+          <div class="small">食費＋娯楽＋交通費</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>① 月次予算の明細（編集可能）</h2>
+      <table>
+        <thead><tr><th>用途</th><th>金額（¥）</th><th>説明</th></tr></thead>
+        <tbody>
+          <tr><td>手取り収入</td><td><input id="p_income" type="number" min="0" step="1" value="240000" /></td><td><input id="p_income_note" type="text" value="毎月の給与" /></td></tr>
+          <tr><td>貯蓄専用口座（自動振替）</td><td><input id="p_saving" type="number" min="0" step="1" value="120000" /></td><td><input id="p_saving_note" type="text" value="給与日に固定振替" /></td></tr>
+          <tr><td>家賃・電気・燃費など</td><td><input id="p_fixed" type="number" min="0" step="1" value="70000" /></td><td><input id="p_fixed_note" type="text" value="固定費" /></td></tr>
+          <tr><td>食費</td><td><input id="p_food" type="number" min="0" step="1" value="30000" /></td><td><input id="p_food_note" type="text" value="1日1000円（家庭なら2000円）" /></td></tr>
+          <tr><td>娯楽</td><td><input id="p_fun" type="number" min="0" step="1" value="10000" /></td><td><input id="p_fun_note" type="text" value="週1回・1回2500円以内" /></td></tr>
+          <tr><td>交通費</td><td><input id="p_transport" type="number" min="0" step="1" value="10000" /></td><td><input id="p_transport_note" type="text" value="給与日にチャージ" /></td></tr>
+        </tbody>
+      </table>
+      <div class="row" style="margin-top:10px">
+        <button id="savePlan" class="btn">この予算を保存</button>
+        <span class="small muted">（保存先：この端末 / localStorage）</span>
+      </div>
+      <p class="small muted" id="planNote">チェック：食費＋娯楽＋交通費 ≤ 手取り − 貯蓄 − 固定費</p>
+    </div>
+
+    <div class="card">
+      <h2>② 今月の予算と進捗</h2>
+      <div class="row" style="gap:8px">
+        <label for="monthPick">月：</label>
+        <input id="monthPick" type="month" />
+        <button id="resetMonth" class="btn-text">読み込み</button>
+      </div>
+      <!-- 手動入力フォーム：この月の予算（localStorageに保存） -->
+      <div class="row" style="margin-top:8px">
+        <span class="small muted">この月の予算（手動入力）：</span>
+        <label>食費</label><input id="mb_food" type="number" min="0" step="1" value="30000">
+        <label>娯楽</label><input id="mb_fun" type="number" min="0" step="1" value="10000">
+        <label>交通費</label><input id="mb_transport" type="number" min="0" step="1" value="10000">
+        <label>その他</label><input id="mb_other" type="number" min="0" step="1" value="0">
+        <button id="saveMonthBudget" class="btn">この月の予算を保存</button>
+      </div>
+      <table>
+        <thead><tr><th>カテゴリー</th><th>予算（¥）</th><th>使用済（¥）</th><th>残り（¥）</th><th>進捗</th></tr></thead>
+        <tbody id="budgetRows"></tbody>
+        <tfoot><tr><td><strong>合計（可処分）</strong></td><td class="right" id="sumBudget">—</td><td class="right" id="sumSpent">—</td><td class="right" id="sumRemain">—</td><td></td></tr></tfoot>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>③ 記帳</h2>
+      <div class="two-col">
+        <div>
+          <div class="row"><label>日付</label><input id="date" type="date"></div>
+          <div class="row"><label>カテゴリー</label>
+            <select id="category">
+              <option value="food">食費</option>
+              <option value="entertain">娯楽</option>
+              <option value="transport">交通費</option>
+              <option value="other">その他</option>
+            </select>
+          </div>
+          <div class="row"><label>金額（¥）</label><input id="amount" type="number" min="1" step="1" placeholder="1000"></div>
+          <div class="row"><label>メモ</label><input id="memo" type="text" placeholder="店名・用途（任意）"></div>
+          <div class="row"><button id="add" class="btn">追加</button></div>
+        </div>
+        <div>
+          <p class="small muted">ヒント：1日1000円目安／娯楽は週1回・1回2500円まで／交通費1万円上限</p>
+          <div class="row"><button id="exportCsv" class="btn-text">CSV 書き出し</button><button id="clearMonth" class="btn-danger">当月を全削除</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>④ 当月の記録</h2>
+      <table>
+        <thead><tr><th>日付</th><th>カテゴリー</th><th class="right">金額（¥）</th><th>メモ</th><th>操作</th></tr></thead>
+        <tbody id="recordsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+  const $ = s=>document.querySelector(s); const $$ = s=>Array.from(document.querySelectorAll(s));
+  const fmt = n=>Number(n).toLocaleString('ja-JP');
+
+  // ===== ① 予算プラン（KPI用） =====
+  const PLAN_KEY='budgetApp::plan::v1';
+  const defaultPlan=()=>({income:240000,saving:120000,fixed:70000,food:30000,fun:10000,transport:10000});
+  const loadPlan=()=>{ try{const s=localStorage.getItem(PLAN_KEY); return s?JSON.parse(s):defaultPlan();}catch{return defaultPlan();} };
+  const savePlan=pl=>localStorage.setItem(PLAN_KEY, JSON.stringify(pl));
+
+  const readPlan=()=>({ income:+$('#p_income').value||0, saving:+$('#p_saving').value||0, fixed:+$('#p_fixed').value||0, food:+$('#p_food').value||0, fun:+$('#p_fun').value||0, transport:+$('#p_transport').value||0 });
+  const fillPlan=p=>{ $('#p_income').value=p.income; $('#p_saving').value=p.saving; $('#p_fixed').value=p.fixed; $('#p_food').value=p.food; $('#p_fun').value=p.fun; $('#p_transport').value=p.transport; };
+  const validate=p=> (p.food+p.fun+p.transport) <= (p.income - p.saving - p.fixed);
+  const syncKPIs=p=>{ $('#kpiIncome').textContent='¥ '+fmt(p.income); $('#kpiSaving').textContent='¥ '+fmt(p.saving); $('#kpiDisposable').textContent='¥ '+fmt(p.food+p.fun+p.transport); };
+
+  // ===== ② 月別予算（手動入力・月単位で保存） =====
+  const monthBudgetKey=ym=>'budgetApp::monthBudget::'+ym;
+  function loadMonthBudget(ym){
+    try{ const s=localStorage.getItem(monthBudgetKey(ym)); if(s) return JSON.parse(s); }catch{}
+    // ない場合は ① の値から初期値を作る（保存はしない）
+    const pl = loadPlan(); return { food:pl.food, fun:pl.fun, transport:pl.transport, other:0 };
+  }
+  function saveMonthBudget(ym, mb){
+    localStorage.setItem(monthBudgetKey(ym), JSON.stringify(mb));
+  }
+  function fillMonthBudgetInputs(mb){
+    $('#mb_food').value = mb.food||0;
+    $('#mb_fun').value = mb.fun||0;
+    $('#mb_transport').value = mb.transport||0;
+    $('#mb_other').value = mb.other||0;
+  }
+  function readMonthBudgetInputs(){
+    return {
+      food: +$('#mb_food').value||0,
+      fun: +$('#mb_fun').value||0,
+      transport: +$('#mb_transport').value||0,
+      other: +$('#mb_other').value||0,
+    };
+  }
+
+  // ===== 記録データ =====
+  const CATEGORY_LABELS={food:'食費',entertain:'娯楽',transport:'交通費',other:'その他'};
+  const monthKey=ym=>'budgetApp::single::'+ym;
+  const loadData=ym=>{ const s=localStorage.getItem(monthKey(ym)); if(!s) return []; try{return JSON.parse(s);}catch{return [];} };
+  const saveData=(ym,arr)=>localStorage.setItem(monthKey(ym), JSON.stringify(arr));
+
+  function renderBudget(ym, mb){
+    const rows=$('#budgetRows'); rows.innerHTML='';
+    const recs=loadData(ym);
+    const budgets={ food:mb.food||0, entertain:mb.fun||0, transport:mb.transport||0, other:mb.other||0 };
+    const spent={ food:0, entertain:0, transport:0, other:0 };
+    recs.forEach(r=>{ spent[r.cat]=(spent[r.cat]||0)+Number(r.amount); });
+
+    let sumB=0,sumS=0;
+    Object.keys(budgets).forEach(cat=>{
+      const b=budgets[cat], s=spent[cat]||0, remain=b-s;
+      sumB+=b; sumS+=s;
+      const pct=b>0?Math.min(100,Math.round(s/b*100)):(s>0?100:0);
+      let cls='bar'; if(b>0 && pct>70 && pct<=100) cls='bar warn'; else if(b>0 && pct>100) cls='bar danger';
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${CATEGORY_LABELS[cat]}</td>
+        <td class="right">${fmt(b)}</td><td class="right">${fmt(s)}</td><td class="right">${fmt(remain)}</td>
+        <td><div class="bar-wrap"><div class="${cls}" style="width:${pct}%"></div></div></td>`;
+      rows.appendChild(tr);
+    });
+    $('#sumBudget').textContent=fmt(sumB); $('#sumSpent').textContent=fmt(sumS); $('#sumRemain').textContent=fmt(sumB-sumS);
+  }
+
+  function renderRecords(ym){
+    const body=$('#recordsBody'); body.innerHTML='';
+    const arr=loadData(ym); arr.sort((a,b)=>a.date.localeCompare(b.date));
+    arr.forEach((r,i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${r.date}</td><td>${CATEGORY_LABELS[r.cat]||r.cat}</td><td class="right">${fmt(r.amount)}</td><td>${r.memo||''}</td><td><button data-i="${i}" class="btn-text btn-del">削除</button></td>`;
+      body.appendChild(tr);
+    });
+    $$('.btn-del').forEach(btn=>btn.addEventListener('click',e=>{
+      const i=+e.target.getAttribute('data-i'); const ym=$('#monthPick').value;
+      const cur=loadData(ym); cur.splice(i,1); saveData(ym,cur);
+      const mb = loadMonthBudget(ym); renderBudget(ym, mb); renderRecords(ym);
+    }));
+  }
+
+  function exportCSV(){
+    const ym=$('#monthPick').value||new Date().toISOString().slice(0,7);
+    const arr=loadData(ym); const lines=[['日付','カテゴリー','金額','メモ'].join(',')];
+    arr.forEach(r=>lines.push([r.date,CATEGORY_LABELS[r.cat]||r.cat,r.amount,(r.memo||'').replace(/,/g,'，')].join(',')));
+    const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`記帳_${ym}.csv`; a.click();
+  }
+
+  function renderAll(){
+    const ym=$('#monthPick').value;
+    const mb = loadMonthBudget(ym);
+    fillMonthBudgetInputs(mb);
+    renderBudget(ym, mb);
+    renderRecords(ym);
+    // KPI は①のプランから
+    const p = loadPlan(); syncKPIs(p);
+  }
+
+  window.addEventListener('DOMContentLoaded',()=>{
+    const d=new Date(); $('#monthPick').value=d.toISOString().slice(0,7); $('#date').value=d.toISOString().slice(0,10);
+
+    // ① 初期化
+    const p=loadPlan(); fillPlan(p); syncKPIs(p);
+
+    // ① 保存
+    $('#savePlan').addEventListener('click',()=>{
+      const np=readPlan();
+      const disposable=np.income-np.saving-np.fixed;
+      const sum3=np.food+np.fun+np.transport;
+      if(sum3>disposable){
+        alert(`保存できません：食費＋娯楽＋交通費（¥${fmt(sum3)}）が、手取り−貯蓄−固定費（¥${fmt(disposable)}）を超えています。`);
+        return;
+      }
+      savePlan(np);
+      syncKPIs(np);
+      const noteEl=$('#planNote'); if(noteEl){ noteEl.textContent='保存しました（チェック合格）。'; setTimeout(()=>noteEl.textContent='チェック：食費＋娯楽＋交通費 ≤ 手取り − 貯蓄 − 固定費',2000); }
+    });
+
+    // ② 月切り替え
+    $('#resetMonth').addEventListener('click', renderAll);
+
+    // ② 月の予算 保存
+    $('#saveMonthBudget').addEventListener('click',()=>{
+      const ym=$('#monthPick').value;
+      const mb=readMonthBudgetInputs();
+      saveMonthBudget(ym, mb);
+      renderBudget(ym, mb);
+    });
+
+    // ③ CSV / 消去 / 追加
+    $('#exportCsv').addEventListener('click', exportCSV);
+    $('#clearMonth').addEventListener('click',()=>{
+      const ym=$('#monthPick').value;
+      if(confirm(`${ym} の記録を全削除します。元に戻せません。`)){ saveData(ym, []); renderAll(); }
+    });
+    $('#add').addEventListener('click',()=>{
+      const ym=$('#monthPick').value; const date=$('#date').value; const cat=$('#category').value;
+      const amount=+$('#amount').value; const memo=$('#memo').value.trim();
+      if(!date || !amount || amount<=0){ alert('日付と金額を正しく入力してください'); return; }
+      const arr=loadData(ym); arr.push({date,cat,amount,memo}); saveData(ym,arr);
+      $('#amount').value=''; $('#memo').value=''; renderAll();
+    });
+
+    renderAll();
+  });
+</script>
 </body>
 </html>
