@@ -19,6 +19,7 @@
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     input,select,button{padding:12px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:16px}
     input[type="number"]{width:160px}
+    input[type="text"]{width:160px}
     button{cursor:pointer}.btn{background:var(--accent);color:#fff;border:none}.btn-text{background:transparent;color:var(--accent);border:1px solid var(--accent)}.btn-danger{background:var(--danger);color:#fff;border:none}
     .bar-wrap{width:100%;background:#f2f3f8;border-radius:999px;height:10px;overflow:hidden;border:1px solid var(--line)}
     .bar{height:100%;background:linear-gradient(90deg,#60a5fa,#10b981);width:0%}.bar.warn{background:linear-gradient(90deg,#fbbf24,#f97316)}.bar.danger{background:linear-gradient(90deg,#f87171,#ef4444)}
@@ -137,7 +138,7 @@
             </select>
           </div>
           <div class="row"><label>金額（¥）</label><input id="amount" type="number" min="1" step="1" placeholder="1000"></div>
-          <div class="row"><label>メモ</label><input id="memo" type="text" placeholder="（任意）"　style="width:100px"></div>
+          <div class="row"><label>メモ</label><input id="memo" type="text" placeholder="（任意）"></div>
           <div class="row"><button id="add" class="btn">追加</button></div>
         </div>
         <div>
