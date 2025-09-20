@@ -101,8 +101,7 @@
         <button id="resetMonth" class="btn-text">読み込み</button>
       </div>
       <!-- 手動入力フォーム：この月の予算（localStorageに保存） -->
-      <div class="row" style="margin-top:8px">
-        <span class="small muted">この月の予算（手動入力）：</span>
+      <div class="row" style="margin-top:7px">
         <label>食費</label><input id="mb_food" type="number" min="0" step="1" value="30000">
         <label>娯楽</label><input id="mb_fun" type="number" min="0" step="1" value="10000">
         <label>交通費</label><input id="mb_transport" type="number" min="0" step="1" value="10000">
@@ -110,9 +109,9 @@
         <button id="saveMonthBudget" class="btn">この月の予算を保存</button>
       </div>
       <table>
-        <thead><tr><th>カテゴリー</th><th>予算（¥）</th><th>使用済（¥）</th><th>残り（¥）</th><th>進捗</th></tr></thead>
+        <thead><tr><th>カテゴリー</th><th>予算（¥）</th><th>使用済</th><th>残り</th><th>進捗</th></tr></thead>
         <tbody id="budgetRows"></tbody>
-        <tfoot><tr><td><strong>合計（可処分）</strong></td><td class="right" id="sumBudget">—</td><td class="right" id="sumSpent">—</td><td class="right" id="sumRemain">—</td><td></td></tr></tfoot>
+        <tfoot><tr><td><strong>合計</strong></td><td class="right" id="sumBudget">—</td><td class="right" id="sumSpent">—</td><td class="right" id="sumRemain">—</td><td></td></tr></tfoot>
       </table>
     </div>
 
